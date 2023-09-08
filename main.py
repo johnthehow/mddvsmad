@@ -57,3 +57,5 @@ def raw(trees):
 	with open(save_path, mode='wb') as file:
 		pickle.dump(res, file)
 
+
+ss = raw(trees)
