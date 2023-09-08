@@ -43,7 +43,7 @@ def raw(trees):
 		try:
 			print(f'processing {tree_cnt}-th tree',end='\x1b\r')
 			tree = next(trees)
-			dep_dist = tree.depd_std_mean_abs
+			dep_dist = tree.depd_mean_abs
 			dep_distances.append(dep_dist)
 			attn_dist = bertplus_hier.analyzer(tree.text_lower, tree.tokens_lower).attentions.noclssep.scale.linear.reduced.attention_distance
 			attn_distances.append(attn_dist)
