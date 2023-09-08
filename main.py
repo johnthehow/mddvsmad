@@ -25,7 +25,7 @@ while True:
 		print('done')
 		break
 
-res = [depd_distances, attn_distances]
+res = [dep_distances, attn_distances]
 
 with open(save_path, mode='wb') as file:
 	pickle.dump(res, file)
