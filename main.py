@@ -14,12 +14,15 @@ attn_distances = []
 
 while True:
 	try:
+		print(f'processing {tree_cnt}-th tree',end='\x1b\r')
 		tree = next(trees)
 		dep_dist = tree.depd_std_mean_abs
-		dep_dists.append(dep_dist)
+		dep_distances.append(dep_dist)
 		attn_dist = bertplus_hier.analyzer(tree.text_lower, tree.tokens_lower).attentions.noclssep.scale.linear.reduced.standard_attention_distance
-		attn_dists.append(attn_dist)
+		attn_distances.append(attn_dist)
+		tree_cnt += 1
 	except StopIteration:
+		print('done')
 		break
 
 res = [depd_distances, attn_distances]
