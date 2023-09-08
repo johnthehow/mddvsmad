@@ -32,6 +32,7 @@ def dep_vs_attn_mean(dep_dists, attn_dists, save_path):
 			ax.scatter(dep_dists, attn_dist, facecolors='none', edgecolors='k',linewidths=0.5)
 			ax.set_xlabel('sentence standard mean dependency distance')
 			ax.set_ylabel(f'sentence standard mean attention distance at head {lay+1:02d}-{head+1:02d}')
+			ax.set_title(f'MDD(Sentence) vs MAD(Sentence) at Head {lay+1:02d}-{head+1:02d}')
 			filename = f'{lay+1:02d}_{head+1:02d}.png'
 			plt.savefig(save_path_obj.joinpath(filename),format='png')
 			plt.close()
