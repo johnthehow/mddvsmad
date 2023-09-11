@@ -1,6 +1,7 @@
 import pickle
 import matplotlib.pyplot as plt
 from pathlib import Path
+import argparse
 
 pickle_path = 'D:/raw.pkl'
 with open(pickle_path, mode='rb') as file:
@@ -38,6 +39,6 @@ def dep_vs_attn_mean(dep_dists, attn_dists, save_path):
 			plt.close()
 
 
-dep_vs_attn_mean(dep_dists, attn_dists, 'D:/test/figs_raw/')
+dep_vs_attn_mean(dep_dists, attn_dists, 'D:/figs')
 
 	
