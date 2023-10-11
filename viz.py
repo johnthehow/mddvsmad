@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import argparse
 
-pickle_path = 'D:/raw.pkl'
+pickle_path = 'D:/test/raw_directed.pkl'
 with open(pickle_path, mode='rb') as file:
 	res = pickle.load(file)
 
@@ -31,8 +31,8 @@ def dep_vs_attn_mean(dep_dists, attn_dists, save_path):
 			fig = plt.figure()
 			ax = fig.subplots()
 			ax.scatter(dep_dists, attn_dist, facecolors='none', edgecolors='k',linewidths=0.5)
-			ax.set_xlabel('sentence mean dependency distance')
-			ax.set_ylabel(f'sentence mean attention distance {lay+1:02d}-{head+1:02d}')
+			ax.set_xlabel('sentence mean dependency distance (directed)')
+			ax.set_ylabel(f'sentence mean attention distance (directed){lay+1:02d}-{head+1:02d}')
 			ax.set_title(f'MDD(Sentence) vs MAD(Sentence) at Head {lay+1:02d}-{head+1:02d}')
 			filename = f'{lay+1:02d}_{head+1:02d}.png'
 			plt.savefig(save_path_obj.joinpath(filename),format='png')

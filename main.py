@@ -43,7 +43,7 @@ def raw(trees):
 		try:
 			print(f'processing {tree_cnt}-th tree',end='\x1b\r')
 			tree = next(trees)
-			dep_dist = tree.depd_mean_abs
+			dep_dist = tree.depd_mean_raw
 			dep_distances.append(dep_dist)
 			attn_dist = bertplus_hier.analyzer(tree.text_lower, tree.tokens_lower).attentions.noclssep.scale.linear.reduced.attention_distance
 			attn_distances.append(attn_dist)
@@ -57,5 +57,28 @@ def raw(trees):
 	with open(save_path, mode='wb') as file:
 		pickle.dump(res, file)
 
+def raw_directed(trees):
+	save_path = 'D:/test/raw_directed.pkl'
+	tree_cnt = 0
+	dep_distances = []
+	attn_distances = []
 
-ss = raw(trees)
+	while True:
+		try:
+			print(f'processing {tree_cnt}-th tree',end='\x1b\r')
+			tree = next(trees)
+			dep_dist = tree.depd_mean_raw
+			dep_distances.append(dep_dist)
+			attn_dist = bertplus_hier.analyzer(tree.text_lower, tree.tokens_lower).attentions.noclssep.scale.linear.reduced.attention_distance_directed
+			attn_distances.append(attn_dist)
+			tree_cnt += 1
+		except StopIteration:
+			print('done')
+			break
+
+	res = [dep_distances, attn_distances]
+
+	with open(save_path, mode='wb') as file:
+		pickle.dump(res, file)
+
+ss = raw_directed(trees)
