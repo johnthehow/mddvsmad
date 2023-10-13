@@ -1,8 +1,14 @@
 from thehow.transeasy.bert import bertplus_hier
 from thehow.tuda import depd_core
+from thehow.snips.logx import logger
+import matplotlib.pyplot as plt
+from pathlib import Path
 import pickle
 
-def get_sent_mdd_and_mad_mean_abs_std(trees, save_path): # 获取trees树库中所有句子的句平均依存距离(绝对值+句长标准化)和注意力距离(绝对值+句长标准化)
+
+def mad_vs_mdd(trees, variation, pkl_savepath, fig_savepath):
+	pkl_savepath_obj = Path(pkl_savepath)
+	fig_savepath_obj = Path(fig_savepath)
 	tree_cnt = 0
 	dep_distances = []
 	attn_distances = []
@@ -11,67 +17,56 @@ def get_sent_mdd_and_mad_mean_abs_std(trees, save_path): # 获取trees树库中�
 		try:
 			print(f'processing {tree_cnt}-th tree',end='\x1b\r')
 			tree = next(trees)
-			dep_dist = tree.depd_mean_abs_std
-			dep_distances.append(dep_dist)
-			attn_dist = bertplus_hier.analyzer(tree.text_lower, tree.tokens_lower).attentions.noclssep.scale.linear.reduced.standard_attention_distance_abs
-			attn_distances.append(attn_dist)
+			if variation == ['mean','directed','standard']:
+				sent_dep_distance = tree.depd_mean_directed_std
+				sent_attn_distance = bertplus_hier.analyzer(tree.text_lower, tree.tokens_lower).attentions.noclssep.scale.linear.reduced.attention_distance_mean_directed_std
+			elif variation == ['mean','directed','raw']:
+				sent_dep_distance = tree.depd_mean_directed
+				sent_attn_distance = bertplus_hier.analyzer(tree.text_lower, tree.tokens_lower).attentions.noclssep.scale.linear.reduced.attention_distance_mean_directed
+			elif variation == ['mean','abs','standard']:
+				sent_dep_distance = tree.depd_mean_abs_std
+				sent_attn_distance = bertplus_hier.analyzer(tree.text_lower, tree.tokens_lower).attentions.noclssep.scale.linear.reduced.attention_distance_mean_abs_std
+			elif variation == ['mean','abs','raw']:
+				sent_dep_distance = tree.depd_mean_abs
+				sent_attn_distance = bertplus_hier.analyzer(tree.text_lower, tree.tokens_lower).attentions.noclssep.scale.linear.reduced.attention_distance_mean_abs
+			else:
+				raise ValueError('[ERR] unsupported varation combination')
+			dep_distances.append(sent_dep_distance)
+			attn_distances.append(sent_attn_distance)
 			tree_cnt += 1
 		except StopIteration:
-			print('done')
+			logger.info('Done')
 			break
-
 	res = [dep_distances, attn_distances]
 
-	with open(save_path, mode='wb') as file:
+	with open(pkl_savepath, mode='wb') as file:
 		pickle.dump(res, file)
+	logger.info(f'result pickle saved at {pkl_savepath}')
 
-def get_sent_mdd_mean_directed_and_mad_mean_abs(trees, save_path):
-	tree_cnt = 0
-	dep_distances = []
-	attn_distances = []
+	with open(pkl_savepath, mode='rb') as file:
+		res_input = pickle.load(file)
+	logger.info(f'start of visualization')
 
-	while True:
-		try:
-			print(f'processing {tree_cnt}-th tree',end='\x1b\r')
-			tree = next(trees)
-			dep_dist = tree.depd_mean_directed
-			dep_distances.append(dep_dist)
-			attn_dist = bertplus_hier.analyzer(tree.text_lower, tree.tokens_lower).attentions.noclssep.scale.linear.reduced.attention_distance_abs
-			attn_distances.append(attn_dist)
-			tree_cnt += 1
-		except StopIteration:
-			print('done')
-			break
+	dep_dists = res_input[0] # List(1000,)
+	attn_dists = res_input[1] # List(1000, Tensor(12,12))
 
-	res = [dep_distances, attn_distances]
-
-	with open(save_path, mode='wb') as file:
-		pickle.dump(res, file)
-
-def get_sent_mdd_mean_raw_and_mad_mean_directed(trees, save_path):
-	tree_cnt = 0
-	dep_distances = []
-	attn_distances = []
-
-	while True:
-		try:
-			print(f'processing {tree_cnt}-th tree',end='\x1b\r')
-			tree = next(trees)
-			dep_dist = tree.depd_mean_directed
-			dep_distances.append(dep_dist)
-			attn_dist = bertplus_hier.analyzer(tree.text_lower, tree.tokens_lower).attentions.noclssep.scale.linear.reduced.attention_distance_directed
-			attn_distances.append(attn_dist)
-			tree_cnt += 1
-		except StopIteration:
-			print('done')
-			break
-
-	res = [dep_distances, attn_distances]
-
-	with open(save_path, mode='wb') as file:
-		pickle.dump(res, file)
+	for lay in range(12):
+		for head in range(12):
+			attn_dist = [i[lay,head].item() for i in attn_dists] # List[1000]
+			fig = plt.figure()
+			ax = fig.subplots()			
+			ax.scatter(dep_dists, attn_dist, facecolors='none', edgecolors='k',linewidths=0.5)
+			ax.set_xlabel(f'sentence dependency distance {variation[0]} {variation[1]} {variation[2]}')
+			ax.set_ylabel(f'sentence attention distance {variation[0]} {variation[1]} {variation[2]} {lay+1:02d}-{head+1:02d}')
+			ax.set_title(f'MDD(Sentence) vs MAD(Sentence) at Head {lay+1:02d}-{head+1:02d}')
+			filename = f'{lay+1:02d}_{head+1:02d}.png'
+			plt.savefig(fig_savepath_obj.joinpath(filename),format='png')
+			plt.close()
+	logger.info(f'figs saved at {fig_savepath}')
 
 if __name__ == '__main__':
-	conll_path = 'D:/test/en_pud-ud-test.conllu'
+	conll_path = 'D:/test/mddvsmad/corpus/tiny100.conllu'
+	pkl_savepath = 'D:/test/mddvsmad/pkl/result.pkl'
+	fig_savepath = 'D:/test/mddvsmad/fig'
 	trees = depd_core.trees_gi(conll_path)
-	result = get_sent_mdd_and_mad_mean_directed(trees,'D:/test/mddvsmad_res/result.pkl')
+	result = mad_vs_mdd(trees, ['mean','directed','raw'], pkl_savepath, fig_savepath)
