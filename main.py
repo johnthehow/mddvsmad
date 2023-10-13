@@ -1,12 +1,21 @@
 from thehow.transeasy.bert import bertplus_hier
 from thehow.tuda import depd_core
 from thehow.snips.logx import logger
+from thehow.snips import timex
 import matplotlib.pyplot as plt
 from pathlib import Path
 import pickle
+import os
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('ismean')
+parser.add_argument('isabs')
+parser.add_argument('isstd')
+args = parser.parse_args()
 
 
-def mad_vs_mdd(trees, variation, pkl_savepath, fig_savepath):
+
+def sent_mdd_vs_mad(trees, variation, pkl_savepath, fig_savepath):
 	pkl_savepath_obj = Path(pkl_savepath)
 	fig_savepath_obj = Path(fig_savepath)
 	tree_cnt = 0
@@ -15,7 +24,8 @@ def mad_vs_mdd(trees, variation, pkl_savepath, fig_savepath):
 
 	while True:
 		try:
-			print(f'processing {tree_cnt}-th tree',end='\x1b\r')
+			# print(f'processing {tree_cnt}-th tree',end='\x1b\r')
+			logger.info(f'processing {tree_cnt}-th tree')
 			tree = next(trees)
 			if variation == ['mean','directed','standard']:
 				sent_dep_distance = tree.depd_mean_directed_std
@@ -50,6 +60,7 @@ def mad_vs_mdd(trees, variation, pkl_savepath, fig_savepath):
 	dep_dists = res_input[0] # List(1000,)
 	attn_dists = res_input[1] # List(1000, Tensor(12,12))
 
+	fig_cnt = 0
 	for lay in range(12):
 		for head in range(12):
 			attn_dist = [i[lay,head].item() for i in attn_dists] # List[1000]
@@ -62,11 +73,19 @@ def mad_vs_mdd(trees, variation, pkl_savepath, fig_savepath):
 			filename = f'{lay+1:02d}_{head+1:02d}.png'
 			plt.savefig(fig_savepath_obj.joinpath(filename),format='png')
 			plt.close()
+			fig_cnt += 1
+			logger.info(f'drawn {fig_cnt} figs')
 	logger.info(f'figs saved at {fig_savepath}')
 
+
 if __name__ == '__main__':
-	conll_path = 'D:/test/mddvsmad/corpus/tiny100.conllu'
-	pkl_savepath = 'D:/test/mddvsmad/pkl/result.pkl'
-	fig_savepath = 'D:/test/mddvsmad/fig'
+	variation = [args.ismean,args.isabs,args.isstd]
+	# variation = ['mean','directed','raw']
+	conll_path = 'D:/test/mddvsmad/corpus/en_pud-ud-test.conllu'
+	pkl_savepath = f'D:/test/mddvsmad/pkl/result_{timex.timestamp14()}.pkl'
+	fig_savepath = f'D:/test/mddvsmad/fig/{variation[0]}_{variation[1]}_{variation[2]}_{timex.timestamp14()}'
+	os.makedirs(fig_savepath)
 	trees = depd_core.trees_gi(conll_path)
-	result = mad_vs_mdd(trees, ['mean','directed','raw'], pkl_savepath, fig_savepath)
+	logger.info(f'setting: {variation}')
+	result = sent_mdd_vs_mad(trees, variation , pkl_savepath, fig_savepath)
+	logger.info(f'log saved at: {logger.handlers[1].baseFilename}')
