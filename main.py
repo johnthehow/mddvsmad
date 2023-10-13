@@ -2,11 +2,6 @@ from thehow.transeasy.bert import bertplus_hier
 from thehow.tuda import depd_core
 import pickle
 
-conll_path = 'D:/test/en_pud-ud-test.conllu'
-
-
-trees = depd_core.trees_gi(conll_path)
-
 
 def get_sent_mdd_and_mad_mean_abs_std(trees): # 获取trees树库中所有句子的句平均依存距离(绝对值+句长标准化)和注意力距离(绝对值+句长标准化)
 	save_path = 'D:/test/standard.pkl'
@@ -81,4 +76,7 @@ def get_sent_mdd_mean_raw_and_mad_mean_directed(trees):
 	with open(save_path, mode='wb') as file:
 		pickle.dump(res, file)
 
-result = get_sent_mdd_and_mad_mean_directed(trees)
+if __name__ == '__main__':
+	conll_path = 'D:/test/en_pud-ud-test.conllu'
+	trees = depd_core.trees_gi(conll_path)
+	result = get_sent_mdd_and_mad_mean_directed(trees)
