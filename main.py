@@ -77,7 +77,6 @@ def sent_mdd_vs_mad(trees, variation, pkl_savepath, fig_savepath):
 			logger.info(f'drawn {fig_cnt} figs')
 	logger.info(f'figs saved at {fig_savepath}')
 
-
 if __name__ == '__main__':
 	variation = [args.ismean,args.isabs,args.isstd]
 	# variation = ['mean','directed','raw']
